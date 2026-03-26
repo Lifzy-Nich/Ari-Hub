@@ -1,86 +1,8 @@
 -- ============================================
--- INFINITY YIELD ULTIMATE v2.0
--- UNIVERSAL - BISA DIGUNAKAN DI SEMUA GAME
--- GOD MODE INVINCIBLE | ANTI STUN | ESP | TELEPORT
--- UI SIZE: 180x200 | AUTO SAVE ALL SETTINGS
+-- PART 1: HEADER & ANTI-CHEAT
+-- INFINITY YIELD ULTIMATE v2.1
 -- ============================================
 
--- ================= PART 1: ANTI-CHEAT BYPASS =================
-local AntiCheat = {Enabled = true}
-
-local function hideExploit()
-    if game:GetService("CoreGui"):FindFirstChild("RobloxGui") then
-        local fake = Instance.new("ScreenGui")
-        fake.Name = "RobloxPromptGui"
-        fake.Parent = game:GetService("CoreGui")
-    end
-    
-    local function clearConsole()
-        local console = game:GetService("CoreGui"):FindFirstChild("RobloxGui")
-        if console then
-            for _, v in pairs(console:GetChildren()) do
-                if v:IsA("Frame") and (v.Name == "Console" or v.Name == "DeveloperConsole") then
-                    v:Destroy()
-                end
-            end
-        end
-    end
-    clearConsole()
-    
-    local oldLoadstring = loadstring
-    getgenv().loadstring = function(str, chunkname)
-        if str and (str:find("infinity") or str:find("yield") or str:find("exploit")) then
-            return function() return end
-        end
-        return oldLoadstring(str, chunkname)
-    end
-end
-
-local function detectAndDestroyAntiCheat()
-    local antiCheatNames = {"AntiCheat", "AC", "Security", "Protection", "Admin", "Ban", "Check", "Monitor"}
-    local remoteNames = {"Anti", "Cheat", "Ban", "Kick", "Report", "Log"}
-    
-    for _, v in pairs(workspace:GetChildren()) do
-        for _, name in pairs(antiCheatNames) do
-            if v.Name and v.Name:find(name) then
-                pcall(function() v:Destroy() end)
-            end
-        end
-    end
-    
-    for _, v in pairs(game:GetService("ReplicatedStorage"):GetChildren()) do
-        for _, name in pairs(antiCheatNames) do
-            if v.Name and v.Name:find(name) then
-                pcall(function() v:Destroy() end)
-            end
-        end
-    end
-    
-    for _, v in pairs(game:GetService("ReplicatedStorage"):GetChildren()) do
-        if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
-            for _, name in pairs(remoteNames) do
-                if v.Name and v.Name:find(name) then
-                    pcall(function() v:Destroy() end)
-                end
-            end
-        end
-    end
-end
-
-local function startAntiCheat()
-    hideExploit()
-    detectAndDestroyAntiCheat()
-    spawn(function()
-        while wait(15) do
-            if AntiCheat.Enabled then
-                detectAndDestroyAntiCheat()
-            end
-        end
-    end)
-    print("🛡️ Anti-Cheat Active")
-end
-
--- ================= PART 2: VARIABLES =================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -88,7 +10,6 @@ local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
 local camera = Workspace.CurrentCamera
 
--- Core Variables
 local espEnabled = false
 local espObjects = {}
 local godModeEnabled = false
@@ -98,12 +19,93 @@ local noClipEnabled = false
 local currentSpeed = 50
 local savedData = {points = {}, settings = {}}
 local fileName = "InfinityYield.json"
-
--- God Mode Protection Variables
 local godModeConnections = {}
-local godModeLoop = nil
+local antiStunLoop = nil
+local speedLoop = nil
+local noClipLoop = nil
 
--- ================= PART 3: SAVE/LOAD SYSTEM =================
+print("✅ PART 1 LOADED - Variables & Anti-Cheat Ready")
+-- ============================================
+-- PART 2: ANTI-CHEAT SYSTEM
+-- ============================================
+
+local function hideExploit()
+    pcall(function()
+        if game:GetService("CoreGui"):FindFirstChild("RobloxGui") then
+            local fake = Instance.new("ScreenGui")
+            fake.Name = "RobloxPromptGui"
+            fake.Parent = game:GetService("CoreGui")
+        end
+    end)
+    
+    pcall(function()
+        local console = game:GetService("CoreGui"):FindFirstChild("RobloxGui")
+        if console then
+            for _, v in pairs(console:GetChildren()) do
+                if v:IsA("Frame") and (v.Name == "Console" or v.Name == "DeveloperConsole") then
+                    v:Destroy()
+                end
+            end
+        end
+    end)
+end
+
+local function detectAndDestroyAntiCheat()
+    local antiCheatNames = {"AntiCheat", "AC", "Security", "Protection", "Admin", "Ban", "Check", "Monitor"}
+    local remoteNames = {"Anti", "Cheat", "Ban", "Kick", "Report", "Log"}
+    
+    pcall(function()
+        for _, v in pairs(workspace:GetChildren()) do
+            for _, name in pairs(antiCheatNames) do
+                if v.Name and string.find(v.Name, name) then
+                    v:Destroy()
+                end
+            end
+        end
+    end)
+    
+    pcall(function()
+        for _, v in pairs(game:GetService("ReplicatedStorage"):GetChildren()) do
+            for _, name in pairs(antiCheatNames) do
+                if v.Name and string.find(v.Name, name) then
+                    v:Destroy()
+                end
+            end
+        end
+    end)
+    
+    pcall(function()
+        for _, v in pairs(game:GetService("ReplicatedStorage"):GetChildren()) do
+            if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
+                for _, name in pairs(remoteNames) do
+                    if v.Name and string.find(v.Name, name) then
+                        v:Destroy()
+                    end
+                end
+            end
+        end
+    end)
+end
+
+local function startAntiCheat()
+    pcall(function()
+        hideExploit()
+        detectAndDestroyAntiCheat()
+    end)
+    
+    spawn(function()
+        while wait(15) do
+            pcall(function() detectAndDestroyAntiCheat() end)
+        end
+    end)
+    print("🛡️ Anti-Cheat Active")
+end
+
+print("✅ PART 2 LOADED - Anti-Cheat System Ready")
+-- ============================================
+-- PART 3: SAVE & LOAD SYSTEM
+-- ============================================
+
 local function loadData()
     local success, data = pcall(function()
         if isfile and isfile(fileName) then
@@ -119,7 +121,7 @@ local function loadData()
             if not savedData.points then savedData.points = {} end
             if not savedData.settings then savedData.settings = {} end
             currentSpeed = savedData.settings.speed or 50
-            print("📁 Loaded: " .. #savedData.points .. " points, Speed: " .. currentSpeed)
+            print("📁 Loaded: " .. #savedData.points .. " points")
             return
         end
     end
@@ -138,22 +140,21 @@ local function saveData()
     end)
 end
 
--- ================= PART 4: GOD MODE INVINCIBLE =================
+print("✅ PART 3 LOADED - Save/Load System Ready")
+-- ============================================
+-- PART 4: GOD MODE SYSTEM (INVINCIBLE)
+-- ============================================
+
 local function destroyConnections()
     for _, conn in pairs(godModeConnections) do
         pcall(function() conn:Disconnect() end)
     end
     godModeConnections = {}
-    if godModeLoop then
-        pcall(function() godModeLoop:Disconnect() end)
-        godModeLoop = nil
-    end
 end
 
 local function startGodMode()
     destroyConnections()
     
-    -- Connection 1: Health protection setiap frame
     local healthConn = RunService.RenderStepped:Connect(function()
         if not godModeEnabled then return end
         local character = LocalPlayer.Character
@@ -164,52 +165,51 @@ local function startGodMode()
                     humanoid.Health = humanoid.MaxHealth
                 end
                 humanoid.BreakJointsOnDeath = false
-                humanoid.MaxHealth = 9e9
-                humanoid.Health = 9e9
+                pcall(function()
+                    humanoid.MaxHealth = 9e9
+                    humanoid.Health = 9e9
+                end)
             end
         end
     end)
     table.insert(godModeConnections, healthConn)
     
-    -- Connection 2: Damage protection dari part
     local damageConn = RunService.RenderStepped:Connect(function()
         if not godModeEnabled then return end
         local character = LocalPlayer.Character
         if character then
             for _, part in pairs(character:GetDescendants()) do
                 if part:IsA("BasePart") then
-                    part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
+                    pcall(function()
+                        part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
+                    end)
                 end
             end
         end
     end)
     table.insert(godModeConnections, damageConn)
     
-    -- Connection 3: Cegah kill dari script
     local killConn = RunService.RenderStepped:Connect(function()
         if not godModeEnabled then return end
         local character = LocalPlayer.Character
         if character then
             local humanoid = character:FindFirstChild("Humanoid")
             if humanoid then
-                humanoid:BreakJointsOnDeath = false
+                humanoid.BreakJointsOnDeath = false
             end
         end
     end)
     table.insert(godModeConnections, killConn)
     
-    -- Connection 4: Cegah lava, void, dan environment damage
     local envConn = RunService.RenderStepped:Connect(function()
         if not godModeEnabled then return end
         local character = LocalPlayer.Character
         if character then
             local rootPart = character:FindFirstChild("HumanoidRootPart")
             if rootPart then
-                -- Cegah jatuh ke void
                 if rootPart.Position.Y < -100 then
                     rootPart.CFrame = CFrame.new(0, 50, 0)
                 end
-                -- Cegah damage dari lava/fire
                 local humanoid = character:FindFirstChild("Humanoid")
                 if humanoid then
                     humanoid.Health = humanoid.MaxHealth
@@ -219,7 +219,6 @@ local function startGodMode()
     end)
     table.insert(godModeConnections, envConn)
     
-    -- Connection 5: Cegah anchor dan destroy
     local anchorConn = RunService.RenderStepped:Connect(function()
         if not godModeEnabled then return end
         local character = LocalPlayer.Character
@@ -232,7 +231,7 @@ local function startGodMode()
     end)
     table.insert(godModeConnections, anchorConn)
     
-    print("🛡️ GOD MODE ACTIVE - Completely Invincible")
+    print("🛡️ GOD MODE ACTIVE")
 end
 
 local function stopGodMode()
@@ -241,13 +240,17 @@ local function stopGodMode()
     if character then
         local humanoid = character:FindFirstChild("Humanoid")
         if humanoid then
-            humanoid.MaxHealth = 100
-            humanoid.Health = 100
-            humanoid.BreakJointsOnDeath = true
+            pcall(function()
+                humanoid.MaxHealth = 100
+                humanoid.Health = 100
+                humanoid.BreakJointsOnDeath = true
+            end)
         end
         for _, part in pairs(character:GetDescendants()) do
             if part:IsA("BasePart") then
-                part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5, 0.5, 0.5)
+                pcall(function()
+                    part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5, 0.5, 0.5)
+                end)
             end
         end
     end
@@ -263,8 +266,11 @@ local function toggleGodMode()
     end
 end
 
--- ================= PART 5: ANTI STUN =================
-local antiStunLoop = nil
+print("✅ PART 4 LOADED - God Mode Ready")
+-- ============================================
+-- PART 5: ANTI STUN & SPEED SYSTEM
+-- ============================================
+
 local function startAntiStun()
     if antiStunLoop then antiStunLoop:Disconnect() end
     antiStunLoop = RunService.RenderStepped:Connect(function()
@@ -273,8 +279,8 @@ local function startAntiStun()
         if character then
             local humanoid = character:FindFirstChild("Humanoid")
             if humanoid then
-                if humanoid:GetState() == Enum.HumanoidStateType.Freefall or
-                   humanoid:GetState() == Enum.HumanoidStateType.GettingUp then
+                local state = humanoid:GetState()
+                if state == Enum.HumanoidStateType.Freefall or state == Enum.HumanoidStateType.GettingUp then
                     humanoid:ChangeState(Enum.HumanoidStateType.Running)
                 end
                 if speedEnabled and humanoid.WalkSpeed ~= currentSpeed then
@@ -300,7 +306,97 @@ local function toggleAntiStun()
     end
 end
 
--- ================= PART 6: ESP SYSTEM =================
+local function applySpeed()
+    local character = LocalPlayer.Character
+    if character then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then humanoid.WalkSpeed = currentSpeed end
+    end
+end
+
+local function startSpeedLoop()
+    if speedLoop then speedLoop:Disconnect() end
+    speedLoop = RunService.RenderStepped:Connect(function()
+        if speedEnabled and LocalPlayer.Character then
+            local humanoid = LocalPlayer.Character:FindFirstChild("Humanoid")
+            if humanoid and humanoid.WalkSpeed ~= currentSpeed then
+                humanoid.WalkSpeed = currentSpeed
+            end
+        end
+    end)
+end
+
+local function setSpeed(value)
+    currentSpeed = math.clamp(value, 1, 1000)
+    saveData()
+    if speedEnabled then applySpeed() end
+end
+
+local function toggleSpeed()
+    speedEnabled = not speedEnabled
+    if speedEnabled then
+        applySpeed()
+        startSpeedLoop()
+        print("⚡ Speed ON: " .. currentSpeed)
+    else
+        local character = LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then humanoid.WalkSpeed = 16 end
+        end
+        if speedLoop then speedLoop:Disconnect() speedLoop = nil end
+        print("❌ Speed OFF")
+    end
+end
+
+print("✅ PART 5 LOADED - Anti Stun & Speed Ready")
+-- ============================================
+-- PART 6: NO CLIP & ESP SYSTEM
+-- ============================================
+
+local function applyNoClip()
+    local character = LocalPlayer.Character
+    if not character then return end
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = not noClipEnabled
+        end
+    end
+end
+
+local function startNoClipLoop()
+    if noClipLoop then noClipLoop:Disconnect() end
+    noClipLoop = RunService.RenderStepped:Connect(function()
+        if noClipEnabled and LocalPlayer.Character then
+            for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end)
+end
+
+local function toggleNoClip()
+    noClipEnabled = not noClipEnabled
+    if noClipEnabled then
+        applyNoClip()
+        startNoClipLoop()
+        print("🧱 No Clip ON")
+    else
+        local character = LocalPlayer.Character
+        if character then
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+        if noClipLoop then noClipLoop:Disconnect() noClipLoop = nil end
+        print("❌ No Clip OFF")
+    end
+end
+
 local function createESP(player)
     if not espEnabled then return end
     if player == LocalPlayer then return end
@@ -418,97 +514,11 @@ local function toggleESP()
     end
 end
 
--- ================= PART 7: SPEED SYSTEM =================
-local speedLoop = nil
-local function applySpeed()
-    local character = LocalPlayer.Character
-    if character then
-        local humanoid = character:FindFirstChild("Humanoid")
-        if humanoid then humanoid.WalkSpeed = currentSpeed end
-    end
-end
+print("✅ PART 6 LOADED - No Clip & ESP Ready")
+-- ============================================
+-- PART 7: TELEPORT SYSTEM
+-- ============================================
 
-local function startSpeedLoop()
-    if speedLoop then speedLoop:Disconnect() end
-    speedLoop = RunService.RenderStepped:Connect(function()
-        if speedEnabled and LocalPlayer.Character then
-            local humanoid = LocalPlayer.Character:FindFirstChild("Humanoid")
-            if humanoid and humanoid.WalkSpeed ~= currentSpeed then
-                humanoid.WalkSpeed = currentSpeed
-            end
-        end
-    end)
-end
-
-local function setSpeed(value)
-    currentSpeed = math.clamp(value, 1, 1000)
-    saveData()
-    if speedEnabled then applySpeed() end
-end
-
-local function toggleSpeed()
-    speedEnabled = not speedEnabled
-    if speedEnabled then
-        applySpeed()
-        startSpeedLoop()
-        print("⚡ Speed ON: " .. currentSpeed)
-    else
-        local character = LocalPlayer.Character
-        if character then
-            local humanoid = character:FindFirstChild("Humanoid")
-            if humanoid then humanoid.WalkSpeed = 16 end
-        end
-        if speedLoop then speedLoop:Disconnect() speedLoop = nil end
-        print("❌ Speed OFF")
-    end
-end
-
--- ================= PART 8: NO CLIP =================
-local noClipLoop = nil
-local function applyNoClip()
-    local character = LocalPlayer.Character
-    if not character then return end
-    for _, part in pairs(character:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = not noClipEnabled
-        end
-    end
-end
-
-local function startNoClipLoop()
-    if noClipLoop then noClipLoop:Disconnect() end
-    noClipLoop = RunService.RenderStepped:Connect(function()
-        if noClipEnabled and LocalPlayer.Character then
-            for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") and part.CanCollide then
-                    part.CanCollide = false
-                end
-            end
-        end
-    end)
-end
-
-local function toggleNoClip()
-    noClipEnabled = not noClipEnabled
-    if noClipEnabled then
-        applyNoClip()
-        startNoClipLoop()
-        print("🧱 No Clip ON")
-    else
-        local character = LocalPlayer.Character
-        if character then
-            for _, part in pairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = true
-                end
-            end
-        end
-        if noClipLoop then noClipLoop:Disconnect() noClipLoop = nil end
-        print("❌ No Clip OFF")
-    end
-end
-
--- ================= PART 9: TELEPORT SYSTEM =================
 local function teleportToPosition(pos)
     local character = LocalPlayer.Character
     if not character then return false end
@@ -564,24 +574,18 @@ end
 local function getPlayerList()
     local players = {}
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then table.insert(players, player) end
+        if player ~= LocalPlayer then
+            table.insert(players, player)
+        end
     end
     return players
 end
 
--- ================= PART 10: CHARACTER RESPAWN =================
-LocalPlayer.CharacterAdded:Connect(function(character)
-    wait(0.5)
-    if speedEnabled then applySpeed() end
-    if noClipEnabled then applyNoClip() end
-    if godModeEnabled then startGodMode() end
-    if espEnabled then
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then createESP(player) end
-        end
-        end
-    end
-    -- ================= PART 11: UI CREATION (180x200) =================
+print("✅ PART 7 LOADED - Teleport System Ready")
+-- ============================================
+-- PART 8: UI HEADER & TAB BUTTONS
+-- ============================================
+
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "InfinityYield"
 screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -598,7 +602,6 @@ local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 8)
 mainCorner.Parent = mainFrame
 
--- Header
 local header = Instance.new("Frame")
 header.Parent = mainFrame
 header.Size = UDim2.new(1, 0, 0, 26)
@@ -648,7 +651,6 @@ local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = UDim.new(0, 4)
 closeCorner.Parent = closeBtn
 
--- Tab Buttons
 local tabFrame = Instance.new("Frame")
 tabFrame.Parent = mainFrame
 tabFrame.Size = UDim2.new(1, 0, 0, 26)
@@ -676,20 +678,22 @@ for i, tabName in ipairs(tabs) do
     btnCorner.Parent = btn
 end
 
--- Content Container
 local container = Instance.new("Frame")
 container.Parent = mainFrame
 container.Size = UDim2.new(1, -10, 1, -62)
 container.Position = UDim2.new(0, 5, 0, 54)
 container.BackgroundTransparency = 1
 
--- ================= PART 12: MAIN PANEL =================
+print("✅ PART 8 LOADED - UI Header Ready")
+-- ============================================
+-- PART 9: MAIN PANEL BUTTONS
+-- ============================================
+
 local mainPanel = Instance.new("Frame")
 mainPanel.Parent = container
 mainPanel.Size = UDim2.new(1, 0, 1, 0)
 mainPanel.BackgroundTransparency = 1
 
--- ESP Toggle
 local espBtn = Instance.new("TextButton")
 espBtn.Parent = mainPanel
 espBtn.Size = UDim2.new(1, 0, 0, 28)
@@ -699,12 +703,10 @@ espBtn.BorderSizePixel = 0
 espBtn.Text = "🔍 ESP"
 espBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
 espBtn.TextSize = 10
-
 local espCorner = Instance.new("UICorner")
 espCorner.CornerRadius = UDim.new(0, 5)
 espCorner.Parent = espBtn
 
--- God Mode Toggle
 local godBtn = Instance.new("TextButton")
 godBtn.Parent = mainPanel
 godBtn.Size = UDim2.new(1, 0, 0, 28)
@@ -714,12 +716,10 @@ godBtn.BorderSizePixel = 0
 godBtn.Text = "🛡️ GOD MODE"
 godBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
 godBtn.TextSize = 10
-
 local godCorner = Instance.new("UICorner")
 godCorner.CornerRadius = UDim.new(0, 5)
 godCorner.Parent = godBtn
 
--- Anti Stun Toggle
 local stunBtn = Instance.new("TextButton")
 stunBtn.Parent = mainPanel
 stunBtn.Size = UDim2.new(1, 0, 0, 28)
@@ -729,12 +729,10 @@ stunBtn.BorderSizePixel = 0
 stunBtn.Text = "⚡ ANTI STUN"
 stunBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
 stunBtn.TextSize = 10
-
 local stunCorner = Instance.new("UICorner")
 stunCorner.CornerRadius = UDim.new(0, 5)
 stunCorner.Parent = stunBtn
 
--- Speed Toggle
 local speedBtn = Instance.new("TextButton")
 speedBtn.Parent = mainPanel
 speedBtn.Size = UDim2.new(1, 0, 0, 28)
@@ -744,19 +742,16 @@ speedBtn.BorderSizePixel = 0
 speedBtn.Text = "⚡ SPEED: " .. currentSpeed
 speedBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
 speedBtn.TextSize = 9
-
 local speedCorner = Instance.new("UICorner")
 speedCorner.CornerRadius = UDim.new(0, 5)
 speedCorner.Parent = speedBtn
 
--- Speed Slider
 local sliderBg = Instance.new("Frame")
 sliderBg.Parent = mainPanel
 sliderBg.Size = UDim2.new(1, 0, 0, 3)
 sliderBg.Position = UDim2.new(0, 0, 0, 128)
 sliderBg.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
 sliderBg.BorderSizePixel = 0
-
 local sliderCorner = Instance.new("UICorner")
 sliderCorner.CornerRadius = UDim.new(1, 0)
 sliderCorner.Parent = sliderBg
@@ -767,7 +762,6 @@ sliderFill.Size = UDim2.new(currentSpeed / 1000, 0, 1, 0)
 sliderFill.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
 sliderFill.BorderSizePixel = 0
 
--- No Clip Toggle
 local noclipBtn = Instance.new("TextButton")
 noclipBtn.Parent = mainPanel
 noclipBtn.Size = UDim2.new(1, 0, 0, 28)
@@ -777,19 +771,21 @@ noclipBtn.BorderSizePixel = 0
 noclipBtn.Text = "🧱 NO CLIP"
 noclipBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
 noclipBtn.TextSize = 10
-
 local noclipCorner = Instance.new("UICorner")
 noclipCorner.CornerRadius = UDim.new(0, 5)
 noclipCorner.Parent = noclipBtn
 
--- ================= PART 13: TELEPORT PANEL =================
+print("✅ PART 9 LOADED - Main Panel Ready")
+-- ============================================
+-- PART 10: TELEPORT PANEL & BUTTON FUNCTIONS
+-- ============================================
+
 local tpPanel = Instance.new("Frame")
 tpPanel.Parent = container
 tpPanel.Size = UDim2.new(1, 0, 1, 0)
 tpPanel.BackgroundTransparency = 1
 tpPanel.Visible = false
 
--- Save Point Input
 local saveInput = Instance.new("TextBox")
 saveInput.Parent = tpPanel
 saveInput.Size = UDim2.new(1, 0, 0, 26)
@@ -800,7 +796,6 @@ saveInput.PlaceholderText = "Point name"
 saveInput.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
 saveInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 saveInput.TextSize = 8
-
 local saveInputCorner = Instance.new("UICorner")
 saveInputCorner.CornerRadius = UDim.new(0, 4)
 saveInputCorner.Parent = saveInput
@@ -811,19 +806,17 @@ saveBtn.Size = UDim2.new(1, 0, 0, 26)
 saveBtn.Position = UDim2.new(0, 0, 0, 30)
 saveBtn.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
 saveBtn.BorderSizePixel = 0
-saveBtn.Text = "💾 SAVE POSITION"
+saveBtn.Text = "💾 SAVE"
 saveBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 saveBtn.TextSize = 8
-
 local saveCorner = Instance.new("UICorner")
 saveCorner.CornerRadius = UDim.new(0, 4)
 saveCorner.Parent = saveBtn
 
--- Saved Points List
 local pointsTitle = Instance.new("TextLabel")
 pointsTitle.Parent = tpPanel
 pointsTitle.Size = UDim2.new(1, 0, 0, 18)
-pointsTitle.Position = UDim2.new(0, 0, 0, 62)
+pointsTitle.Position = UDim2.new(0, 0, 0, 60)
 pointsTitle.BackgroundTransparency = 1
 pointsTitle.Text = "SAVED"
 pointsTitle.TextColor3 = Color3.fromRGB(255, 215, 0)
@@ -832,21 +825,19 @@ pointsTitle.TextSize = 8
 local pointsScroll = Instance.new("ScrollingFrame")
 pointsScroll.Parent = tpPanel
 pointsScroll.Size = UDim2.new(1, 0, 0, 60)
-pointsScroll.Position = UDim2.new(0, 0, 0, 80)
+pointsScroll.Position = UDim2.new(0, 0, 0, 78)
 pointsScroll.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
 pointsScroll.BackgroundTransparency = 0.5
 pointsScroll.BorderSizePixel = 0
 pointsScroll.ScrollBarThickness = 2
-
 local pointsCorner = Instance.new("UICorner")
 pointsCorner.CornerRadius = UDim.new(0, 4)
 pointsCorner.Parent = pointsScroll
 
--- Player TP List
 local playerTitle = Instance.new("TextLabel")
 playerTitle.Parent = tpPanel
 playerTitle.Size = UDim2.new(1, 0, 0, 18)
-playerTitle.Position = UDim2.new(0, 0, 1, -50)
+playerTitle.Position = UDim2.new(0, 0, 1, -48)
 playerTitle.BackgroundTransparency = 1
 playerTitle.Text = "PLAYERS"
 playerTitle.TextColor3 = Color3.fromRGB(255, 215, 0)
@@ -855,21 +846,19 @@ playerTitle.TextSize = 8
 local playerScroll = Instance.new("ScrollingFrame")
 playerScroll.Parent = tpPanel
 playerScroll.Size = UDim2.new(1, 0, 0, 45)
-playerScroll.Position = UDim2.new(0, 0, 1, -30)
+playerScroll.Position = UDim2.new(0, 0, 1, -28)
 playerScroll.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
 playerScroll.BackgroundTransparency = 0.5
 playerScroll.BorderSizePixel = 0
 playerScroll.ScrollBarThickness = 2
-
 local playerCorner = Instance.new("UICorner")
 playerCorner.CornerRadius = UDim.new(0, 4)
 playerCorner.Parent = playerScroll
-    -- ================= PART 14: REFRESH FUNCTIONS =================
+
 local function refreshPointsList()
     for _, child in pairs(pointsScroll:GetChildren()) do
         if child:IsA("Frame") then child:Destroy() end
     end
-    
     local yPos = 2
     for i, point in ipairs(savedData.points) do
         local item = Instance.new("Frame")
@@ -878,11 +867,9 @@ local function refreshPointsList()
         item.Position = UDim2.new(0, 3, 0, yPos)
         item.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
         item.BorderSizePixel = 0
-        
         local itemCorner = Instance.new("UICorner")
         itemCorner.CornerRadius = UDim.new(0, 3)
         itemCorner.Parent = item
-        
         local nameLabel = Instance.new("TextLabel")
         nameLabel.Parent = item
         nameLabel.Size = UDim2.new(1, -55, 0, 16)
@@ -892,7 +879,6 @@ local function refreshPointsList()
         nameLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
         nameLabel.TextSize = 7
         nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-        
         local tpBtn = Instance.new("TextButton")
         tpBtn.Parent = item
         tpBtn.Size = UDim2.new(0, 35, 0, 20)
@@ -902,15 +888,12 @@ local function refreshPointsList()
         tpBtn.Text = "TP"
         tpBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
         tpBtn.TextSize = 7
-        
         local tpCorner = Instance.new("UICorner")
         tpCorner.CornerRadius = UDim.new(0, 3)
         tpCorner.Parent = tpBtn
-        
         tpBtn.MouseButton1Click:Connect(function()
             teleportToSavedPoint(i)
         end)
-        
         local delBtn = Instance.new("TextButton")
         delBtn.Parent = item
         delBtn.Size = UDim2.new(0, 35, 0, 20)
@@ -920,16 +903,13 @@ local function refreshPointsList()
         delBtn.Text = "DEL"
         delBtn.TextColor3 = Color3.fromRGB(255, 150, 150)
         delBtn.TextSize = 7
-        
         local delCorner = Instance.new("UICorner")
         delCorner.CornerRadius = UDim.new(0, 3)
         delCorner.Parent = delBtn
-        
         delBtn.MouseButton1Click:Connect(function()
             deleteTeleportPoint(i)
             refreshPointsList()
         end)
-        
         yPos = yPos + 38
     end
     pointsScroll.CanvasSize = UDim2.new(0, 0, 0, yPos + 4)
@@ -939,10 +919,8 @@ local function refreshPlayerList()
     for _, child in pairs(playerScroll:GetChildren()) do
         if child:IsA("Frame") then child:Destroy() end
     end
-    
     local players = getPlayerList()
     local yPos = 2
-    
     for i, player in ipairs(players) do
         local item = Instance.new("Frame")
         item.Parent = playerScroll
@@ -950,11 +928,9 @@ local function refreshPlayerList()
         item.Position = UDim2.new(0, 3, 0, yPos)
         item.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
         item.BorderSizePixel = 0
-        
         local itemCorner = Instance.new("UICorner")
         itemCorner.CornerRadius = UDim.new(0, 3)
         itemCorner.Parent = item
-        
         local nameLabel = Instance.new("TextLabel")
         nameLabel.Parent = item
         nameLabel.Size = UDim2.new(1, -45, 1, 0)
@@ -964,7 +940,6 @@ local function refreshPlayerList()
         nameLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
         nameLabel.TextSize = 7
         nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-        
         local tpBtn = Instance.new("TextButton")
         tpBtn.Parent = item
         tpBtn.Size = UDim2.new(0, 35, 0, 20)
@@ -974,21 +949,17 @@ local function refreshPlayerList()
         tpBtn.Text = "TP"
         tpBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
         tpBtn.TextSize = 7
-        
         local tpCorner = Instance.new("UICorner")
         tpCorner.CornerRadius = UDim.new(0, 3)
         tpCorner.Parent = tpBtn
-        
         tpBtn.MouseButton1Click:Connect(function()
             teleportToPlayer(player)
         end)
-        
         yPos = yPos + 32
     end
     playerScroll.CanvasSize = UDim2.new(0, 0, 0, yPos + 4)
 end
 
--- ================= PART 15: BUTTON FUNCTIONS =================
 espBtn.MouseButton1Click:Connect(function()
     toggleESP()
     if espEnabled then
@@ -1057,7 +1028,6 @@ saveBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ================= PART 16: SLIDER FUNCTION =================
 local sliderDragging = false
 sliderBg.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -1085,7 +1055,7 @@ UserInputService.InputEnded:Connect(function(input)
         sliderDragging = false
     end
 end)
-    -- ================= PART 17: TAB SWITCHING =================
+
 local function switchTab(tabName)
     for name, btn in pairs(tabButtons) do
         if name == tabName then
@@ -1107,7 +1077,6 @@ end
 tabButtons["MAIN"].MouseButton1Click:Connect(function() switchTab("MAIN") end)
 tabButtons["TP"].MouseButton1Click:Connect(function() switchTab("TP") end)
 
--- ================= PART 18: MINIMIZE & CLOSE =================
 local minimized = false
 minimizeBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
@@ -1134,7 +1103,6 @@ closeBtn.MouseButton1Click:Connect(function()
     print("🔴 Infinity Yield Closed")
 end)
 
--- ================= PART 19: DRAGABLE UI =================
 local dragStartPos, dragStartMouse
 local dragging = false
 
@@ -1159,7 +1127,18 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
--- ================= PART 20: PLAYER HANDLERS =================
+LocalPlayer.CharacterAdded:Connect(function(character)
+    wait(0.5)
+    if speedEnabled then applySpeed() end
+    if noClipEnabled then applyNoClip() end
+    if godModeEnabled then startGodMode() end
+    if espEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then createESP(player) end
+        end
+    end
+end)
+
 Players.PlayerAdded:Connect(function(player)
     if espEnabled and player ~= LocalPlayer then
         player.CharacterAdded:Connect(function()
@@ -1175,7 +1154,6 @@ Players.PlayerRemoving:Connect(function(player)
     if tpPanel.Visible then refreshPlayerList() end
 end)
 
--- ================= PART 21: AUTO REFRESH =================
 spawn(function()
     while wait(5) do
         if tpPanel.Visible then
@@ -1185,7 +1163,6 @@ spawn(function()
     end
 end)
 
--- ================= PART 22: INITIALIZATION =================
 loadData()
 currentSpeed = savedData.settings.speed or 50
 sliderFill.Size = UDim2.new(currentSpeed / 1000, 0, 1, 0)
@@ -1196,16 +1173,13 @@ startAntiCheat()
 switchTab("MAIN")
 
 print("=" .. string.rep("=", 45))
-print("∞ INFINITY YIELD ULTIMATE v2.0")
-print("📱 UI: 180x200 | Auto Save Settings")
+print("∞ INFINITY YIELD ULTIMATE v2.1")
+print("📱 OPTIMIZED FOR DELTA HP")
+print("📐 UI: 180x200 | Auto Save Settings")
 print("")
 print("🎮 FEATURES:")
 print("   🔍 ESP - Player name & distance")
 print("   🛡️ GOD MODE - Complete invincible")
-print("      • Lava/Fire damage immune")
-print("      • Void/fall damage immune")
-print("      • Bullet/melee immune")
-print("      • Script kill immune")
 print("   ⚡ ANTI STUN - No stun/slow/knockback")
 print("   ⚡ SPEED - 1-1000 (Slider)")
 print("   🧱 NO CLIP - Walk through walls")
